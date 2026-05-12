@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}New Payment{% endblock %}
+{% block page_title %}New Payment{% endblock %}
+{% block page_subtitle %}Record a payment transaction{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px;">
+<div class="card">
+  <form method="POST" id="payment-form">
+    <div class="form-group">
+      <label class="form-label">Customer</label>
+      <select name="customer_id" class="form-control">
+        <option value="">Walk-in / Anonymous</option>
+        {% for c in customers %}
+        <option value="{{ c.id }}">{{ c.name }} ({{ c.phone }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Amount (UGX) *</label>
+        <input type="number" name="amount" class="form-control" id="amount-input" step="0.01" min="0" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method *</label>
+        <select name="method" class="form-control" required>
+          <option value="cash">💵 Cash</option>
+          <option value="mtn">📱 MTN Mobile Money</option>
+          <option value="airtel">📱 Airtel Money Uganda</option>
+          <option value="card">💳 Visa / Mastercard</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Promo Code (optional)</label>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" name="promo_code" class="form-control" id="promo-input" placeholder="Enter code" style="text-transform: uppercase;">
+        <button type="button" class="btn btn-secondary" onclick="validatePromo()">Apply</button>
+      </div>
+      <div id="promo-result" style="margin-top: 8px; font-size: 13px;"></div>
+    </div>
+
+    <div style="padding: 16px; background: var(--surface2); border-radius: 8px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+        <span class="text-muted">Subtotal</span>
+        <span id="subtotal">UGX 0</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: var(--orange);">
+        <span>Discount</span>
+        <span id="discount">- UGX 0</span>
+      </div>
+      <div class="separator" style="margin: 10px 0;"></div>
+      <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 600; color: var(--gold);">
+        <span>Total</span>
+        <span id="total">UGX 0</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" class="btn btn-primary" style="flex: 1;">
+        <i class="fas fa-check"></i> Record Payment
+      </button>
+      <a href="{{ url_for('payments.index') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let discountAmount = 0;
+document.getElementById('amount-input').addEventListener('input', updateTotal);
+
+function updateTotal() {
+  const amount = parseFloat(document.getElementById('amount-input').value) || 0;
+  document.getElementById('subtotal').textContent = 'UGX ' + amount.toLocaleString();
+  document.getElementById('discount').textContent = '- UGX ' + discountAmount.toLocaleString();
+  document.getElementById('total').textContent = 'UGX ' + Math.max(0, amount - discountAmount).toLocaleString();
+}
+
+async function validatePromo() {
+  const code = document.getElementById('promo-input').value;
+  const amount = parseFloat(document.getElementById('amount-input').value) || 0;
+  const res = await fetch(`/api/validate-promo?code=${code}`);
+  const data = await res.json();
+  const el = document.getElementById('promo-result');
+  if (data.valid) {
+    discountAmount = data.type === 'fixed' ? data.value : amount * data.value / 100;
+    el.innerHTML = `<span style="color: var(--green)"><i class="fas fa-check-circle"></i> Code applied! You save UGX ${discountAmount.toLocaleString()}</span>`;
+    updateTotal();
+  } else {
+    discountAmount = 0;
+    el.innerHTML = `<span style="color: var(--red)"><i class="fas fa-times-circle"></i> Invalid or expired promo code</span>`;
+    updateTotal();
+  }
+}
+</script>
+{% endblock %}

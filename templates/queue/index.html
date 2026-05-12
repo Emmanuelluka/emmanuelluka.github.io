@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Queue{% endblock %}
+{% block page_title %}Walk-in Queue{% endblock %}
+{% block page_subtitle %}Manage today's walk-in customers{% endblock %}
+{% block topbar_actions %}
+<button onclick="openModal('modal-join-queue')" class="btn btn-primary"><i class="fas fa-plus"></i> Add to Queue</button>
+{% endblock %}
+{% block content %}
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-clock text-gold"></i> Waiting ({{ queue|length }})</div></div>
+    {% for entry in queue %}
+    <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface2);border-radius:10px;margin-bottom:10px;border:1px solid var(--border);">
+      <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000;flex-shrink:0;">{{ entry.queue_number }}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:14px;">{{ entry.customer_name }}</div>
+        <div style="font-size:12px;color:var(--text-muted);">{{ entry.service.name if entry.service else 'Any service' }}</div>
+        <div style="font-size:11px;color:var(--text-dim);">Joined {{ entry.joined_at.strftime('%H:%M') }}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <form method="POST" action="{{ url_for('queue.serve', id=entry.id) }}"><button type="submit" class="btn btn-xs btn-success"><i class="fas fa-scissors"></i> Serve</button></form>
+        <form method="POST" action="{{ url_for('queue.remove', id=entry.id) }}"><button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-times"></i> Remove</button></form>
+      </div>
+    </div>
+    {% else %}<div class="empty-state" style="padding:40px 20px;"><i class="fas fa-couch"></i><p>Queue is empty.</p></div>{% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title" style="color:var(--green);"><i class="fas fa-scissors"></i> In Service ({{ in_service|length }})</div></div>
+    {% for entry in in_service %}
+    <div style="display:flex;align-items:center;gap:14px;padding:14px;background:rgba(34,197,94,0.05);border-radius:10px;margin-bottom:10px;border:1px solid rgba(34,197,94,0.15);">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000;">{{ entry.queue_number }}</div>
+      <div style="flex:1;"><div style="font-weight:600;">{{ entry.customer_name }}</div><div style="font-size:12px;color:var(--text-muted);">{{ entry.service.name if entry.service else '—' }}</div></div>
+      <form method="POST" action="{{ url_for('queue.complete', id=entry.id) }}"><button type="submit" class="btn btn-xs btn-success"><i class="fas fa-check"></i> Done</button></form>
+    </div>
+    {% else %}<div class="empty-state" style="padding:40px 20px;"><i class="fas fa-chair"></i><p>No one being served.</p></div>{% endfor %}
+  </div>
+</div>
+<div class="modal-overlay" id="modal-join-queue">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add to Queue</div><button class="modal-close" onclick="closeModal('modal-join-queue')">×</button></div>
+    <form method="POST" action="{{ url_for('queue.join') }}">
+      <div class="form-group"><label class="form-label">Customer Name *</label><input type="text" name="customer_name" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" placeholder="+254..."></div>
+      <div class="form-group"><label class="form-label">Service</label>
+        <select name="service_id" class="form-control"><option value="">No preference</option>{% for s in services %}<option value="{{ s.id }}">{{ s.name }} — UGX {{ "{:,.0f}".format(s.price) }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label class="form-label">Preferred Barber</label>
+        <select name="barber_id" class="form-control"><option value="">Any available</option>{% for b in barbers %}<option value="{{ b.id }}">{{ b.user.full_name }}</option>{% endfor %}</select></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-plus"></i> Add to Queue</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

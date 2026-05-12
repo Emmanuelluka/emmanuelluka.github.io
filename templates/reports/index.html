@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+{% block topbar_actions %}
+<div style="display:flex;gap:8px;">
+  {% for p in ['week','month','year'] %}
+  <a href="{{ url_for('reports.index', period=p) }}" class="btn {% if period == p %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">{{ p.title() }}</a>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card gold"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-value">UGX {{ "{:,.0f}".format(total_revenue) }}</div><div class="stat-label">Total Revenue</div></div>
+  <div class="stat-card green"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-value">{{ total_appts }}</div><div class="stat-label">Appointments</div></div>
+  <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">{{ new_customers }}</div><div class="stat-label">New Customers</div></div>
+  <div class="stat-card orange"><div class="stat-icon"><i class="fas fa-rotate"></i></div><div class="stat-value">{{ ((returning_customers / total_customers * 100)|int if total_customers else 0) }}%</div><div class="stat-label">Retention Rate</div></div>
+</div>
+<div class="grid-2" style="margin-top:24px;margin-bottom:24px;">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar text-gold"></i> Revenue Trend</div></div>
+    {% if revenue_data %}
+    {% set max_rev = namespace(v=1) %}
+    {% for d in revenue_data %}{% if d.revenue > max_rev.v %}{% set max_rev.v = d.revenue %}{% endif %}{% endfor %}
+    <div style="height:160px;display:flex;align-items:flex-end;gap:4px;padding-top:10px;">
+      {% for d in revenue_data %}
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="width:100%;border-radius:4px 4px 0 0;background:var(--gold);
+          height:{{ ((d.revenue/max_rev.v)*130)|int if max_rev.v > 0 else 2 }}px;min-height:2px;opacity:0.8;"></div>
+        <div style="font-size:9px;color:var(--text-muted);">{{ d.date[-5:] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<div class="text-muted" style="font-size:13px;">No data for this period.</div>{% endif %}
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-credit-card text-gold"></i> Payment Methods</div></div>
+    {% set total_m = namespace(v=0) %}
+    {% for method, amount in methods %}{% set total_m.v = total_m.v + amount %}{% endfor %}
+    {% for method, amount in methods %}
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+        <span>{{ method | upper }}</span><span class="text-gold">UGX {{ "{:,.0f}".format(amount) }}</span>
+      </div>
+      <div style="height:6px;background:var(--surface2);border-radius:3px;">
+        <div style="height:6px;background:var(--gold);border-radius:3px;width:{{ ((amount/total_m.v)*100)|int if total_m.v > 0 else 0 }}%;"></div>
+      </div>
+    </div>
+    {% else %}<div class="text-muted" style="font-size:13px;">No payment data.</div>{% endfor %}
+  </div>
+</div>
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-scissors text-gold"></i> Top Services</div></div>
+    {% for name, count in top_services %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;">{{ name }}</span><span class="badge badge-gold">{{ count }}x</span>
+    </div>
+    {% else %}<div class="text-muted" style="font-size:13px;">No data yet.</div>{% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-trophy text-gold"></i> Barber Leaderboard</div></div>
+    {% for b in barber_perf %}
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:12px;">{{ loop.index }}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">{{ b.user.full_name }}</div><div style="font-size:11px;color:var(--text-muted);">{{ b.total_clients }} clients</div></div>
+      <div class="text-gold" style="font-size:13px;font-weight:600;">UGX {{ "{:,.0f}".format(b.total_revenue) }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

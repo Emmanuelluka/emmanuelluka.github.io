@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Inventory{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block page_subtitle %}Track products and supplies{% endblock %}
+{% block topbar_actions %}
+{% if current_user.role == 'admin' %}
+<a href="{{ url_for('inventory.add') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Product</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if low_stock %}
+<div style="padding: 14px 18px; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+  <i class="fas fa-triangle-exclamation" style="color: var(--orange); font-size: 18px;"></i>
+  <div>
+    <strong style="color: var(--orange);">Low Stock Alert:</strong>
+    <span style="font-size: 13px; color: var(--text-muted);">{{ low_stock | length }} product(s) need restocking —
+    {% for p in low_stock[:3] %}{{ p.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if low_stock | length > 3 %} and more{% endif %}
+    </span>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>In Stock</th><th>Reorder At</th><th>Unit Cost</th><th>Selling Price</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>
+            <div style="font-weight: 500;">{{ p.name }}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">{{ p.supplier.name if p.supplier else '—' }}</div>
+          </td>
+          <td class="mono text-muted" style="font-size: 12px;">{{ p.sku or '—' }}</td>
+          <td><span class="badge badge-gray">{{ p.category }}</span></td>
+          <td>
+            <span class="badge {% if p.quantity <= 0 %}badge-red{% elif p.quantity <= p.reorder_level %}badge-orange{% else %}badge-green{% endif %}">
+              {{ p.quantity }} units
+            </span>
+          </td>
+          <td style="font-size: 13px; color: var(--text-muted);">{{ p.reorder_level }}</td>
+          <td>UGX {{ "{:,.0f}".format(p.unit_price or 0) }}</td>
+          <td class="text-gold">UGX {{ "{:,.0f}".format(p.selling_price or 0) }}</td>
+          <td>
+            <button onclick="openModal('restock-{{ p.id }}')" class="btn btn-xs btn-success">
+              <i class="fas fa-plus"></i> Restock
+            </button>
+          </td>
+        </tr>
+        <!-- Restock Modal -->
+        <div class="modal-overlay" id="restock-{{ p.id }}">
+          <div class="modal" style="max-width: 360px;">
+            <div class="modal-header">
+              <div class="modal-title">Restock: {{ p.name }}</div>
+              <button class="modal-close" onclick="closeModal('restock-{{ p.id }}')">×</button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+              Current stock: <strong>{{ p.quantity }} units</strong>
+            </p>
+            <form method="POST" action="{{ url_for('inventory.restock', id=p.id) }}">
+              <div class="form-group">
+                <label class="form-label">Quantity to Add</label>
+                <input type="number" name="quantity" class="form-control" min="1" value="10" required>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fas fa-plus"></i> Add Stock</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state"><i class="fas fa-boxes-stacked"></i><p>No products in inventory.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

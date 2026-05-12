@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}{{ today.strftime('%A, %B %d, %Y') }}{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('appointments.book') }}" class="btn btn-primary">
+  <i class="fas fa-plus"></i> Book Appointment
+</a>
+<a href="{{ url_for('queue.index') }}" class="btn btn-secondary">
+  <i class="fas fa-list-ol"></i> Queue
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-coins"></i></div>
+    <div class="stat-value">UGX {{ "{:,.0f}".format(today_revenue) }}</div>
+    <div class="stat-label">Today's Revenue</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+    <div class="stat-value">{{ today_appointments }}</div>
+    <div class="stat-label">Appointments Today ({{ today_completed }} done)</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-value">{{ total_customers }}</div>
+    <div class="stat-label">Total Customers</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon"><i class="fas fa-list-ol"></i></div>
+    <div class="stat-value">{{ queue_count }}</div>
+    <div class="stat-label">Walk-ins Waiting</div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom: 24px;">
+  <!-- Revenue Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-bar text-gold"></i> Weekly Revenue</div>
+      <div style="font-size: 13px; color: var(--text-muted)">Last 7 days</div>
+    </div>
+    <div style="height: 180px; display: flex; align-items: flex-end; gap: 8px; padding-top: 10px;">
+      {% set max_rev = week_data | map(attribute='revenue') | max %}
+      {% for d in week_data %}
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+        <div style="font-size: 10px; color: var(--text-muted)">
+          {% if d.revenue > 0 %}{{ (d.revenue/1000)|round(1) }}k{% endif %}
+        </div>
+        <div style="
+          width: 100%; border-radius: 6px 6px 0 0;
+          height: {{ ((d.revenue / (max_rev if max_rev > 0 else 1)) * 130)|int }}px;
+          min-height: 4px;
+          background: {% if loop.last %}var(--gold){% else %}var(--surface2){% endif %};
+          border: 1px solid {% if loop.last %}var(--gold-dark){% else %}var(--border){% endif %};
+          transition: opacity 0.2s;
+        "></div>
+        <div style="font-size: 11px; color: var(--text-muted)">{{ d.day }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Barber Performance -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-scissors text-gold"></i> Barber Performance</div>
+    </div>
+    {% for barber in barbers %}
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+      <div style="width: 36px; height: 36px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; color: #000; font-size: 14px; flex-shrink: 0;">
+        {{ barber.user.full_name[0] }}
+      </div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 13px; font-weight: 500;">{{ barber.user.full_name }}</div>
+        <div style="height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 5px;">
+          {% set max_r = barbers | map(attribute='total_revenue') | max %}
+          <div style="height: 4px; background: var(--gold); border-radius: 2px;
+            width: {{ ((barber.total_revenue / (max_r if max_r > 0 else 1)) * 100)|int }}%;"></div>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); text-align: right; flex-shrink: 0;">
+        <div class="text-gold">{{ barber.total_clients }}</div>
+        <div>clients</div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not barbers %}
+    <div class="text-muted" style="font-size: 13px;">No barbers registered yet.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent Appointments -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-calendar text-gold"></i> Today's Appointments</div>
+      <a href="{{ url_for('appointments.index') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customer</th><th>Time</th><th>Barber</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for a in recent_appointments %}
+          <tr>
+            <td><div style="font-weight: 500;">{{ a.customer.name }}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">{{ a.service.name }}</div></td>
+            <td class="mono" style="color: var(--gold);">{{ a.appointment_time }}</td>
+            <td style="font-size: 12px;">{{ a.barber.user.full_name }}</td>
+            <td>
+              <span class="badge {% if a.status == 'completed' %}badge-green{% elif a.status == 'cancelled' %}badge-red{% elif a.status == 'scheduled' %}badge-blue{% else %}badge-orange{% endif %}">
+                {{ a.status }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted" style="text-align: center; padding: 30px;">No appointments today</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick Actions + Alerts -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 16px;"><i class="fas fa-bolt text-gold"></i> Quick Actions</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <a href="{{ url_for('appointments.book') }}" class="btn btn-primary" style="justify-content: center;">
+          <i class="fas fa-plus"></i> Book
+        </a>
+        <a href="{{ url_for('queue.index') }}" class="btn btn-secondary" style="justify-content: center;">
+          <i class="fas fa-list-ol"></i> Queue
+        </a>
+        <a href="{{ url_for('payments.new') }}" class="btn btn-secondary" style="justify-content: center;">
+          <i class="fas fa-credit-card"></i> Payment
+        </a>
+        <a href="{{ url_for('customers.add') }}" class="btn btn-secondary" style="justify-content: center;">
+          <i class="fas fa-user-plus"></i> Customer
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 16px;"><i class="fas fa-bell text-gold"></i> Alerts</div>
+      {% if low_stock > 0 %}
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px;
+        background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
+        border-radius: 8px; margin-bottom: 10px;">
+        <i class="fas fa-exclamation-triangle" style="color: var(--orange);"></i>
+        <div>
+          <div style="font-size: 13px; font-weight: 500; color: var(--orange);">{{ low_stock }} product(s) low on stock</div>
+          <a href="{{ url_for('inventory.index') }}" style="font-size: 11px; color: var(--text-muted);">View inventory →</a>
+        </div>
+      </div>
+      {% endif %}
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px;
+        background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;">
+        <i class="fas fa-chart-line" style="color: var(--gold);"></i>
+        <div>
+          <div style="font-size: 13px; font-weight: 500;">Monthly Revenue</div>
+          <div style="font-size: 12px; color: var(--text-muted);">UGX {{ "{:,.0f}".format(month_revenue) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

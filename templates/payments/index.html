@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Payments{% endblock %}
+{% block page_title %}Payments{% endblock %}
+{% block page_subtitle %}Track all transactions{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('payments.new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Payment</a>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-coins"></i></div>
+    <div class="stat-value">UGX {{ "{:,.0f}".format(today_total) }}</div>
+    <div class="stat-label">Today's Collections</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-mobile-screen"></i></div>
+    <div class="stat-value">MTN Mobile Money</div>
+    <div class="stat-label">Primary Payment Method</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+    <div class="stat-value">{{ payments | length }}</div>
+    <div class="stat-label">Transactions Shown</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 20px;">
+  <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+    <div class="form-group" style="margin: 0; min-width: 160px;">
+      <label class="form-label">Date</label>
+      <input type="date" name="date" class="form-control" value="{{ filter_date }}">
+    </div>
+    <div class="form-group" style="margin: 0; min-width: 140px;">
+      <label class="form-label">Method</label>
+      <select name="method" class="form-control">
+        <option value="">All Methods</option>
+        <option value="cash" {% if filter_method == 'cash' %}selected{% endif %}>Cash</option>
+        <option value="mpesa" {% if filter_method == 'mtn' %}selected{% endif %}>M-Pesa</option>
+        <option value="airtel" {% if filter_method == 'airtel' %}selected{% endif %}>Airtel Money</option>
+        <option value="card" {% if filter_method == 'card' %}selected{% endif %}>Card</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-secondary">Filter</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Receipt</th><th>Customer</th><th>Amount</th><th>Method</th><th>Discount</th><th>Commission</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td class="mono text-gold" style="font-size: 12px;">{{ p.receipt_number }}</td>
+          <td>{{ p.customer.name if p.customer else '—' }}</td>
+          <td style="font-weight: 600; color: var(--green);">UGX {{ "{:,.0f}".format(p.amount) }}</td>
+          <td>
+            <span class="badge {% if p.method == 'mtn' %}badge-green{% elif p.method == 'cash' %}badge-gold{% elif p.method == 'airtel' %}badge-orange{% else %}badge-blue{% endif %}">
+              {% if p.method in ['mtn', 'airtel'] %}<i class="fas fa-mobile-screen"></i>{% endif %}
+              {{ p.method | upper }}
+            </span>
+          </td>
+          <td style="color: var(--orange);">{% if p.discount_amount %}UGX {{ "{:,.0f}".format(p.discount_amount) }}{% else %}—{% endif %}</td>
+          <td style="color: var(--text-muted); font-size: 12px;">UGX {{ "{:,.0f}".format(p.barber_commission) }}</td>
+          <td style="font-size: 12px; color: var(--text-muted);">{{ p.created_at.strftime('%b %d, %H:%M') }}</td>
+          <td><a href="{{ url_for('payments.receipt', id=p.id) }}" class="btn btn-xs btn-secondary"><i class="fas fa-receipt"></i></a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state"><i class="fas fa-credit-card"></i><p>No payments found.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

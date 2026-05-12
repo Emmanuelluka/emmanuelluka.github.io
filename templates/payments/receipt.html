@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Receipt {{ payment.receipt_number }}{% endblock %}
+{% block page_title %}Receipt{% endblock %}
+{% block page_subtitle %}{{ payment.receipt_number }}{% endblock %}
+{% block topbar_actions %}
+<button onclick="window.print()" class="btn btn-secondary"><i class="fas fa-print"></i> Print</button>
+<a href="{{ url_for('payments.index') }}" class="btn btn-primary">Done</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 460px; margin: 0 auto;">
+<div class="card" style="text-align: center; padding: 40px;">
+  <div style="font-family: 'Playfair Display', serif; font-size: 32px; color: var(--gold); margin-bottom: 4px;">✂ EliteCut</div>
+  <div style="font-size: 12px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px;">EliteCut Barbershop</div>
+
+  <div style="background: var(--surface2); border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: left;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <span class="text-muted">Receipt No.</span>
+      <span class="mono text-gold">{{ payment.receipt_number }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <span class="text-muted">Date & Time</span>
+      <span>{{ payment.created_at.strftime('%b %d, %Y %H:%M') }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <span class="text-muted">Customer</span>
+      <span>{{ payment.customer.name if payment.customer else 'Walk-in' }}</span>
+    </div>
+    {% if payment.appointment %}
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <span class="text-muted">Service</span>
+      <span>{{ payment.appointment.service.name }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <span class="text-muted">Barber</span>
+      <span>{{ payment.appointment.barber.user.full_name }}</span>
+    </div>
+    {% endif %}
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <span class="text-muted">Method</span>
+      <span class="badge {% if payment.method == 'mtn' %}badge-green{% elif payment.method == 'cash' %}badge-gold{% else %}badge-blue{% endif %}">{{ payment.method | upper }}</span>
+    </div>
+    {% if payment.discount_amount %}
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--orange);">
+      <span>Discount {% if payment.promo_code %}({{ payment.promo_code }}){% endif %}</span>
+      <span>- UGX {{ "{:,.0f}".format(payment.discount_amount) }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="padding: 20px; border: 2px solid var(--gold); border-radius: 10px; margin-bottom: 24px;">
+    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Amount Paid</div>
+    <div style="font-family: 'Playfair Display', serif; font-size: 40px; color: var(--gold); font-weight: 700;">
+      UGX {{ "{:,.0f}".format(payment.amount) }}
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px;">
+    Thank you for choosing EliteCut! ✂<br>
+    See you next time.
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EliteCut — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0b; --surface: #111113; --surface2: #18181b;
+  --border: #27272a; --gold: #c9a96e; --gold-light: #e8c98a;
+  --text: #f4f4f5; --text-muted: #71717a; --text-dim: #3f3f46;
+  --red: #ef4444;
+}
+body {
+  font-family: 'DM Sans', sans-serif; background: var(--bg);
+  color: var(--text); min-height: 100vh;
+  display: flex; align-items: stretch;
+}
+.login-left {
+  flex: 1; background: linear-gradient(135deg, #0f0e0b 0%, #1a1508 50%, #0a0a0b 100%);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 60px; position: relative; overflow: hidden;
+}
+.login-left::before {
+  content: '✂'; font-size: 400px; position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  color: rgba(201,169,110,0.04); pointer-events: none;
+}
+.login-brand { font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 900;
+  color: var(--gold); text-align: center; line-height: 1; }
+.login-tagline { font-size: 14px; color: var(--text-muted); letter-spacing: 4px;
+  text-transform: uppercase; margin-top: 12px; text-align: center; }
+.login-features { margin-top: 60px; display: flex; flex-direction: column; gap: 20px; max-width: 320px; }
+.feature-item { display: flex; align-items: center; gap: 14px; }
+.feature-icon { width: 36px; height: 36px; background: rgba(201,169,110,0.1);
+  border: 1px solid rgba(201,169,110,0.2); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold); font-size: 15px; flex-shrink: 0; }
+.feature-text { font-size: 13px; color: var(--text-muted); }
+.feature-text strong { color: var(--text); display: block; font-size: 14px; }
+
+.login-right {
+  width: 440px; background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; padding: 60px 48px;
+}
+.login-box { width: 100%; }
+.login-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700;
+  color: var(--text); margin-bottom: 8px; }
+.login-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; }
+.form-group { margin-bottom: 18px; }
+.form-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 1.5px; margin-bottom: 8px; display: block; }
+.form-control {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px; color: var(--text);
+  font-size: 14px; font-family: inherit; transition: border-color 0.15s;
+}
+.form-control:focus { outline: none; border-color: var(--gold); }
+.form-control::placeholder { color: var(--text-dim); }
+.btn-login {
+  width: 100%; background: var(--gold); color: #000; border: none;
+  border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: background 0.15s; margin-top: 8px;
+}
+.btn-login:hover { background: var(--gold-light); }
+.alert-error { padding: 10px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: var(--red); border-radius: 8px; font-size: 13px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="login-left">
+  <div class="login-brand">✂ EliteCut</div>
+  <div class="login-tagline">EliteCut Barbershop Management</div>
+  <div class="login-features">
+    <div class="feature-item">
+      <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+      <div class="feature-text">
+        <strong>Smart Scheduling</strong>
+        Book & manage appointments with real-time availability
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="feature-text">
+        <strong>Revenue Analytics</strong>
+        Track earnings, commissions & business performance
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon"><i class="fas fa-users"></i></div>
+      <div class="feature-text">
+        <strong>Customer Loyalty</strong>
+        Build loyalty with points, promos & history tracking
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon"><i class="fas fa-mobile-screen"></i></div>
+      <div class="feature-text">
+        <strong>Mobile Money</strong>
+        Accept MTN MoMo, Airtel Money Uganda, Visa & cash
+      </div>
+    </div>
+  </div>
+</div>
+<div class="login-right">
+  <div class="login-box">
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to your EliteCut account</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert-error"><i class="fas fa-exclamation-circle"></i>{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" placeholder="Enter your username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn-login">Sign In <i class="fas fa-arrow-right"></i></button>
+    </form>
+    
+  </div>
+</div>
+</body>
+</html>

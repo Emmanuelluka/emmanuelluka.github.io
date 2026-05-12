@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment{% endblock %}
+{% block page_title %}Book Appointment{% endblock %}
+{% block page_subtitle %}Schedule a new appointment{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px;">
+<form method="POST">
+<div class="card" style="margin-bottom: 20px;">
+  <div class="card-title" style="margin-bottom: 20px;"><i class="fas fa-user text-gold"></i> Customer Details</div>
+  <div class="form-group">
+    <label class="form-label">Existing Customer</label>
+    <select name="customer_id" class="form-control" id="customer-select">
+      <option value="">— New Customer —</option>
+      {% for c in customers %}
+      <option value="{{ c.id }}">{{ c.name }} ({{ c.phone }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div id="new-customer-fields">
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" name="customer_name" class="form-control" placeholder="Customer name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="text" name="customer_phone" class="form-control" placeholder="+254...">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email (optional)</label>
+      <input type="email" name="customer_email" class="form-control" placeholder="email@example.com">
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 20px;">
+  <div class="card-title" style="margin-bottom: 20px;"><i class="fas fa-scissors text-gold"></i> Service & Barber</div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label class="form-label">Service</label>
+      <select name="service_id" class="form-control" required>
+        <option value="">Select service</option>
+        {% for s in services %}
+        <option value="{{ s.id }}">{{ s.name }} — UGX {{ "{:,.0f}".format(s.price) }} ({{ s.duration }}min)</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Barber</label>
+      <select name="barber_id" class="form-control" id="barber-select" required>
+        <option value="">Select barber</option>
+        {% for b in barbers %}
+        <option value="{{ b.id }}">{{ b.user.full_name }}{% if not b.is_available %} (unavailable){% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" name="appointment_date" class="form-control" id="appt-date"
+        min="{{ today|default('') }}" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Time</label>
+      <select name="appointment_time" class="form-control" id="time-select" required>
+        <option value="">Select barber & date first</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notes (optional)</label>
+    <textarea name="notes" class="form-control" placeholder="Any special requests..."></textarea>
+  </div>
+</div>
+
+<div style="display: flex; gap: 12px;">
+  <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Confirm Booking</button>
+  <a href="{{ url_for('appointments.index') }}" class="btn btn-secondary">Cancel</a>
+</div>
+</form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const customerSelect = document.getElementById('customer-select');
+const newFields = document.getElementById('new-customer-fields');
+customerSelect.addEventListener('change', () => {
+  newFields.style.display = customerSelect.value ? 'none' : 'block';
+});
+
+async function loadSlots() {
+  const bid = document.getElementById('barber-select').value;
+  const date = document.getElementById('appt-date').value;
+  const ts = document.getElementById('time-select');
+  if (!bid || !date) return;
+  ts.innerHTML = '<option>Loading...</option>';
+  const res = await fetch(`/api/barber-slots?barber_id=${bid}&date=${date}`);
+  const slots = await res.json();
+  ts.innerHTML = '<option value="">Select time</option>' +
+    slots.map(s => `<option value="${s.time}" ${!s.available ? 'disabled' : ''}>${s.time}${!s.available ? ' (booked)' : ''}</option>`).join('');
+}
+document.getElementById('barber-select').addEventListener('change', loadSlots);
+document.getElementById('appt-date').addEventListener('change', loadSlots);
+</script>
+{% endblock %}

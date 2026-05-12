@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}{{ barber.user.full_name }}{% endblock %}
+{% block page_title %}{{ barber.user.full_name }}{% endblock %}
+{% block page_subtitle %}Barber Profile & Schedule{% endblock %}
+
+{% block content %}
+<div class="grid-3" style="margin-bottom: 20px;">
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-value">{{ barber.total_clients }}</div>
+    <div class="stat-label">Total Clients</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-coins"></i></div>
+    <div class="stat-value">UGX {{ "{:,.0f}".format(month_revenue) }}</div>
+    <div class="stat-label">This Month's Revenue</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-percent"></i></div>
+    <div class="stat-value">{{ barber.commission_rate }}%</div>
+    <div class="stat-label">Commission Rate</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title" style="margin-bottom: 20px;"><i class="fas fa-calendar-week text-gold"></i> Weekly Schedule</div>
+    <form method="POST" action="{{ url_for('barbers.save_schedule', id=barber.id) }}">
+      {% for i, day in enumerate(days) if enumerate %}
+      {% set sched = schedules | selectattr('day_of_week', 'equalto', i) | first %}
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px; background: var(--surface2); border-radius: 8px;">
+        <input type="checkbox" name="day_{{ i }}" id="day_{{ i }}" value="1"
+          {% if sched and sched.is_working %}checked{% endif %}
+          style="accent-color: var(--gold); width: 16px; height: 16px;">
+        <label for="day_{{ i }}" style="font-size: 13px; width: 90px; cursor: pointer;">{{ day }}</label>
+        <input type="time" name="start_{{ i }}" class="form-control" style="flex: 1; padding: 6px 10px; font-size: 12px;"
+          value="{{ sched.start_time if sched else '08:00' }}">
+        <span class="text-muted" style="font-size: 12px;">to</span>
+        <input type="time" name="end_{{ i }}" class="form-control" style="flex: 1; padding: 6px 10px; font-size: 12px;"
+          value="{{ sched.end_time if sched else '18:00' }}">
+      </div>
+      {% else %}
+      {% for i in range(7) %}
+      {% set day = days[i] %}
+      {% set sched = schedules | selectattr('day_of_week', 'equalto', i) | list | first if schedules else none %}
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px; background: var(--surface2); border-radius: 8px;">
+        <input type="checkbox" name="day_{{ i }}" id="day_{{ i }}" value="1"
+          {% if sched and sched.is_working %}checked{% endif %}
+          style="accent-color: var(--gold); width: 16px; height: 16px;">
+        <label for="day_{{ i }}" style="font-size: 13px; width: 90px; cursor: pointer;">{{ day }}</label>
+        <input type="time" name="start_{{ i }}" class="form-control" style="flex: 1; padding: 6px 10px; font-size: 12px;"
+          value="{{ sched.start_time if sched else '08:00' }}">
+        <span class="text-muted" style="font-size: 12px;">to</span>
+        <input type="time" name="end_{{ i }}" class="form-control" style="flex: 1; padding: 6px 10px; font-size: 12px;"
+          value="{{ sched.end_time if sched else '18:00' }}">
+      </div>
+      {% endfor %}
+      {% endfor %}
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Schedule</button>
+    </form>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 16px;"><i class="fas fa-info-circle text-gold"></i> Info</div>
+      <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">{{ barber.bio or 'No bio added.' }}</div>
+      <div style="font-size: 13px;"><span class="text-muted">Specialization:</span> {{ barber.specialization }}</div>
+      <div style="font-size: 13px; margin-top: 6px;"><span class="text-muted">Experience:</span> {{ barber.years_experience }} years</div>
+      <div style="font-size: 13px; margin-top: 6px;"><span class="text-muted">Email:</span> {{ barber.user.email }}</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 16px;"><i class="fas fa-calendar text-gold"></i> Recent Appointments</div>
+      {% for a in recent_appts[:5] %}
+      <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px;">
+        <div style="font-weight: 500;">{{ a.customer.name }}</div>
+        <div class="text-muted">{{ a.appointment_date }} · {{ a.service.name }}</div>
+      </div>
+      {% else %}
+      <div class="text-muted" style="font-size: 13px;">No appointments yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

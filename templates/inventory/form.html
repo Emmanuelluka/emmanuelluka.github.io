@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Add Product{% endblock %}
+{% block page_title %}Add Product{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px;">
+<div class="card">
+  <form method="POST">
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Product Name *</label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SKU</label>
+        <input type="text" name="sku" class="form-control" placeholder="e.g., HG001">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-control">
+          <option value="styling">Styling</option>
+          <option value="shaving">Shaving</option>
+          <option value="grooming">Grooming</option>
+          <option value="equipment">Equipment</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supplier</label>
+        <select name="supplier_id" class="form-control">
+          <option value="">No Supplier</option>
+          {% for s in suppliers %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Initial Quantity</label>
+        <input type="number" name="quantity" class="form-control" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reorder Level</label>
+        <input type="number" name="reorder_level" class="form-control" value="5" min="0">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Unit Cost (KSh)</label>
+        <input type="number" name="unit_price" class="form-control" step="0.01" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Selling Price (KSh)</label>
+        <input type="number" name="selling_price" class="form-control" step="0.01" value="0">
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Product</button>
+      <a href="{{ url_for('inventory.index') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block page_title %}{{ customer.name }}{% endblock %}
+{% block page_subtitle %}Customer Profile{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-secondary"><i class="fas fa-pen"></i> Edit</a>
+<a href="{{ url_for('appointments.book') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Book</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid-3" style="margin-bottom: 20px;">
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-star"></i></div>
+    <div class="stat-value">{{ customer.loyalty_points }}</div>
+    <div class="stat-label">Loyalty Points</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-scissors"></i></div>
+    <div class="stat-value">{{ customer.total_visits }}</div>
+    <div class="stat-label">Total Visits</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-coins"></i></div>
+    <div class="stat-value">UGX {{ "{:,.0f}".format(customer.total_spent) }}</div>
+    <div class="stat-label">Total Spent</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title" style="margin-bottom: 16px;"><i class="fas fa-user text-gold"></i> Profile</div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+        <span class="text-muted">Phone</span> <span class="mono">{{ customer.phone or '—' }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+        <span class="text-muted">Email</span> <span>{{ customer.email or '—' }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+        <span class="text-muted">Last Visit</span>
+        <span>{{ customer.last_visit.strftime('%b %d, %Y') if customer.last_visit else 'Never' }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px;">
+        <span class="text-muted">Member Since</span>
+        <span>{{ customer.created_at.strftime('%b %d, %Y') }}</span>
+      </div>
+      {% if customer.preferences %}
+      <div class="separator"></div>
+      <div>
+        <div class="text-muted" style="font-size: 12px; margin-bottom: 6px;">Preferences</div>
+        <div style="font-size: 13px;">{{ customer.preferences }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom: 16px;"><i class="fas fa-calendar text-gold"></i> Recent Appointments</div>
+    {% for a in appointments %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+      <div>
+        <div style="font-size: 13px; font-weight: 500;">{{ a.service.name }}</div>
+        <div style="font-size: 11px; color: var(--text-muted);">{{ a.appointment_date }} · {{ a.barber.user.full_name }}</div>
+      </div>
+      <span class="badge {% if a.status == 'completed' %}badge-green{% elif a.status == 'cancelled' %}badge-red{% else %}badge-blue{% endif %}">{{ a.status }}</span>
+    </div>
+    {% else %}
+    <div class="text-muted" style="font-size: 13px;">No appointments yet.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
